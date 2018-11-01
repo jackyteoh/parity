@@ -17,22 +17,29 @@ class EvenParityFile():
     self.fn = filename
     self.file = openfile(self.fn,create)
 
+  def readat(self,bytes,offset):
+    # Read from the file using the sandbox's readat...
+    return self.file.readat(bytes,offset)
 
   def writeat(self,data,offset):
     # check the parity of the data written
-    thisdata = data
+    # tempdata = self.file.readat(None, 0)
+    # changedata = tempdata[offset]
+    if offset == 0:
+      thisdata = self.file.readat(None, 0)
+    else:
+      thisdata = self.file.readat(None, offset)
+      thisdata = thisdata + data
+      thisdata = self.file.readat(None, 0)
     while thisdata:
         eightbytesequence = thisdata[:8]
         thisdata = thisdata[8:]
         even = True
         numberOfEven = 0
-        log(str(eightbytesequence))
         if len(eightbytesequence) < 8:
           even = True
         else:
           for thisbyte in eightbytesequence:
-            # for each byte, if it is even, increase the numberOfEven
-            # log (thisbyte + str(ord(thisbyte) % 2))
             if (ord(thisbyte) % 2 == 0):
               numberOfEven+=1
 
@@ -41,19 +48,12 @@ class EvenParityFile():
         if numberOfEven % 2 == 1:
           even = False
 
-        log(even)
-        log(numberOfEven)
         # actually call write, if we are supposed to...
         if even:
           self.file.writeat(eightbytesequence,offset)
         # ...or error out.
         else:
           raise RepyParityError("Non-even parity write to file")
-  
-  
-  def readat(self,bytes,offset):
-    # Read from the file using the sandbox's readat...
-    return self.file.readat(bytes,offset)
 
   def close(self):
     self.file.close()
